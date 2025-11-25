@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-g">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Kanban Workshop</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-5">
+            <h1 class="text-3xl font-bold text-indigo-700">Interaktiver Kanban Workshop</h1>
+            <p class="text-lg text-gray-600">Die Prinzipien von Kanban live erleben.</p>
+        </div>
+    </header>
+
+    <nav class="container mx-auto px-4 py-4 flex flex-wrap gap-2 justify-center">
+        <button data-nav-button="home" class="nav-button btn btn-primary">Start</button>
+        <button data-nav-button="exp1" class="nav-button btn btn-secondary">1. Multitasking-Mythos</button>
+        <button data-nav-button="exp2" class="nav-button btn btn-secondary">2. Die Münz-Fabrik</button>
+        <button data-nav-button="exp3" class="nav-button btn btn-secondary">3. Der Feature-Stau</button>
+    </nav>
+
+    <main class="container mx-auto p-4">
+
+        <div data-page id="home" class="space-y-6">
+    
+            <div id="registration-card" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-red-600">Bitte registrieren Sie sich</h2>
+                <p class="mb-4">Um Ihre persönlichen Zeiten zu speichern und mit dem Durchschnitt aller Teilnehmer zu vergleichen, benötigen wir einen Namen.</p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input id="user-name-input" type="text" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ihr Name (z.B. Alice)">
+                    <button id="register-button" class="btn btn-primary">Starten & Registrieren</button>
+                </div>
+            </div>
+
+            <div id="home-content" style="display: none;" class="space-y-6">
+                <div class="card">
+                    <h2 id="welcome-name" class="text-2xl font-bold mb-4 text-indigo-600">Willkommen!</h2>
+                    <p class="text-lg mb-4">Diese interaktive Anwendung führt Sie durch drei Experimente, um die Kernprinzipien von Kanban zu demonstrieren. Ihre Ergebnisse werden mit allen anderen Teilnehmern verglichen.</p>
+                    <p class="text-lg">Wählen Sie oben ein Experiment aus, um zu beginnen. Wir empfehlen, mit Experiment 1 zu starten.</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-xl font-semibold mb-3">So funktioniert's:</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>Jedes Experiment hat mehrere Schritte: Setup, Runde 1, Runde 2 und Erkenntnisse.</li>
+                        <li>Folgen Sie den Anweisungen auf dem Bildschirm.</li>
+                        <li>Nutzen Sie die eingebauten Timer und Eingabefelder, um Ihre Ergebnisse zu messen.</li>
+                        <li>Auf der "Erkenntnisse"-Seite sehen Sie den **Durchschnitt aller bisherigen Teilnehmer**.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div data-page id="exp1" class="space-y-6">
+            
+            <div data-step id="exp1-step1" class="card">
+                 <h2 class="text-2xl font-bold mb-4 text-indigo-600">Experiment 1: Multitasking vs. Fokus</h2>
+                <h3 class="text-xl font-semibold mb-3">Das Setup</h3>
+                <ul class="list-none space-y-2">
+                    <li><span class="font-semibold">📝 Material:</span> Stift & Papier</li>
+                    <li><span class="font-semibold">📋 Aufgabe:</span> Erstellen Sie diese Tabelle auf Ihrem Blatt:</li>
+                </ul>
+                <table class="w-full max-w-md my-4 border border-collapse border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-300 p-2">Zahlen (1-10)</th>
+                            <th class="border border-gray-300 p-2">Buchstaben (A-J)</th>
+                            <th class="border border-gray-300 p-2">Römisch (I-X)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border border-gray-300 p-2 h-10"></td>
+                            <td class="border border-gray-300 p-2 h-10"></td>
+                            <td class="border border-gray-300 p-2 h-10"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button onclick="showStep('exp1', 2)" class="btn btn-primary">Weiter zu Runde 1</button>
+            </div>
+
+            <div data-step id="exp1-step2" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Runde 1: Der Standard-Modus</h2>
+                <ul class="list-none space-y-2 mb-4">
+                    <li><span class="font-semibold">📜 Regel:</span> Wir arbeiten **ZEILENWEISE**.</li>
+                    <li><span class="font-semibold">➡️ Ablauf:</span> Sie schreiben: <code class="bg-gray-200 px-1 rounded">1</code>, dann <code class="bg-gray-200 px-1 rounded">A</code>, 
+dann <code class="bg-gray-200 px-1 rounded">I</code>.</li>
+                    <li>...dann erst die nächste Zeile: <code class="bg-gray-200 px-1 rounded">2</code>, dann <code class="bg-gray-200 px-1 rounded">B</code>, dann <code class="bg-gray-200 px-1 rounded">II</code>.</li>
+                    <li><span class="font-semibold">🎯 Ziel:</span> So schnell wie möglich fertig werden.</li>
+                </ul>
+              
+                <div class="flex items-center gap-4">
+                    <button id="exp1-timer1-start" class="btn btn-start">Start</button>
+                    <button id="exp1-timer1-stop" class="btn btn-stop">Stop</button>
+                    <span id="exp1-timer1-display" class="timer-display">00:00.0</span>
+                </div>
+           
+                <div class="mt-6">
+                    <button onclick="showStep('exp1', 1)" class="btn btn-secondary">Zurück</button>
+                    <button onclick="showStep('exp1', 3)" class="btn btn-primary">Weiter zu Runde 2</button>
+                </div>
+            </div>
+
+            <div data-step id="exp1-step3" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Runde 2: Limit WIP (Kanban Flow)</h2>
+                <ul class="list-none space-y-2 mb-4">
+                    <li><span class="font-semibold">📜 Regel:</span> Wir arbeiten **SPALTENWEISE**.</li>
+              
+                    <li><span class="font-semibold">➡️ Ablauf:</span>
+                        <ol class="list-decimal list-inside ml-4">
+                            <li>Erst **alle** Zahlen (1-10) fertigstellen.</li>
+                            <li>Dann **alle** Buchstaben (A-J) fertigstellen.</li>
+                            <li>Dann **alle** römischen Ziffern (I-X) fertigstellen.</li>
+                        </ol>
+                    </li>
+                </ul>
+        
+                <div class="flex items-center gap-4">
+                    <button id="exp1-timer2-start" class="btn btn-start">Start</button>
+                    <button id="exp1-timer2-stop" class="btn btn-stop">Stop</button>
+                    <span id="exp1-timer2-display" class="timer-display">00:00.0</span>
+                </div>
+    
+                <div class="mt-6">
+                    <button onclick="showStep('exp1', 2)" class="btn btn-secondary">Zurück</button>
+                    <button onclick="showStep('exp1', 4); updateExp1Chart();" class="btn btn-primary">Ergebnisse anzeigen</button>
+                </div>
+            </div>
+
+            <div data-step id="exp1-step4" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Erkenntnisse: Experiment 1</h2>
+                
+                <p class="mb-4">Hier ist der visuelle Vergleich Ihrer gemessenen Zeiten. Fast immer ist Runde 2 (Fokus) deutlich schneller.</p>
+                <div class="chart-container">
+                    <canvas id="exp1Chart"></canvas>
+                </div>
+                <div class="mt-6 space-y-2">
+            
+                    <h3 class="text-xl font-semibold">Warum?</h3>
+                    <p><strong>Context Switching:</strong> Das Gehirn verliert Zeit beim Wechsel zwischen Aufgabenarten (Zahl → Buchstabe). Jedes "Umdenken" kostet Energie (Rüstzeit).</p>
+                    <p class="font-bold text-lg text-indigo-700">Kanban-Prinzip: Stop Starting, Start Finishing.</p>
+                </div>
+          
+                <div class="mt-6">
+                    <button onclick="showStep('exp1', 3)" class="btn btn-secondary">Zurück</button>
+                </div>
+            </div>
+        </div>
+
+        <div data-page id="exp2" class="space-y-6">
+
+            <div data-step id="exp2-step1" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Experiment 2: Die Münz-Fabrik</h2>
+                <h3 class="text-xl font-semibold mb-3">Das Setup</h3>
+                <ul class="list-none space-y-2">
+                
+                    <li><span class="font-semibold">👥 Teams:</span> 4 Personen bilden eine Linie.</li>
+                    <li><span class="font-semibold">🔩 Rollen:</span> Arbeiter 1 → Arbeiter 2 → Arbeiter 3 → Arbeiter 4</li>
+                    <li><span class="font-semibold">🪙 Aufgabe:</span> Jede Münze muss von jedem Arbeiter einmal umgedreht werden.</li>
+                    <li><span class="font-semibold">🔢 Menge:</span> 20 Münzen (oder Karten/Bierdeckel).</li>
+                </ul>
+                <button onclick="showStep('exp2', 2)" class="btn btn-primary">Weiter zu Runde 1</button>
+            </div>
+
+            <div data-step id="exp2-step2" class="card">
+                
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Runde 1: Batch Size 20</h2>
+                <ul class="list-none space-y-2 mb-4">
+                    <li><span class="font-semibold">📜 Regel:</span> Arbeiter 1 muss erst **ALLE 20 MÜNZEN** umdrehen.</li>
+                    <li>Erst wenn der ganze Stapel fertig ist, darf er an Arbeiter 2 weitergegeben werden (dasselbe gilt für 2 & 3).</li>
+    
+                    <li><span class="font-semibold">🎯 Wir messen:</span>
+                        <ol class="list-decimal list-inside ml-4">
+                            <li>Wann ist die **erste** Münze fertig?</li>
+                            <li>Wann sind **alle** Münzen fertig?</li>
+                        </ol>
+                    </li>
+                </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+         
+                    <div>
+                        <h4 class="font-semibold">Zeit für 1. Münze:</h4>
+                        <div class="flex items-center gap-4">
+                            <button id="exp2-timer1a-start" class="btn btn-start">Start</button>
+                            <button id="exp2-timer1a-stop" class="btn btn-stop">Stop</button>
+                            <span id="exp2-timer1a-display" class="timer-display">00:00.0</span>
+                        </div>
+                  
+                    </div>
+                    <div>
+                        <h4 class="font-semibold">Zeit für ALLE Münzen:</h4>
+                        <div class="flex items-center gap-4">
+                       
+                            <button id="exp2-timer1b-start" class="btn btn-start">Start</button>
+                            <button id="exp2-timer1b-stop" class="btn btn-stop">Stop</button>
+                            <span id="exp2-timer1b-display" class="timer-display">00:00.0</span>
+                        </div>
+       
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button onclick="showStep('exp2', 1)" class="btn btn-secondary">Zurück</button>
+                    <button onclick="showStep('exp2', 3)" class="btn btn-primary">Weiter zu Runde 2</button>
+   
+                </div>
+            </div>
+
+            <div data-step id="exp2-step3" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Runde 2: Batch Size 1 (One-Piece-Flow)</h2>
+                <ul class="list-none space-y-2 mb-4">
+                    <li><span class="font-semibold">📜 Regel:</span> Sobald du **EINE** Münze umgedreht hast, schiebst du sie sofort zum nächsten Arbeiter.</li>
+                    <li>Die Arbeit "fließt" durch die Hände.</li>
+                    <li><span class="font-semibold">🎯 Wir messen:</span>
+                
+                        <ol class="list-decimal list-inside ml-4">
+                            <li>Wann ist die **erste** Münze fertig?</li>
+                            <li>Wann sind **alle** Münzen fertig?</li>
+                        </ol>
+                    </li>
+                </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        
+                        <h4 class="font-semibold">Zeit für 1. Münze:</h4>
+                        <div class="flex items-center gap-4">
+                            <button id="exp2-timer2a-start" class="btn btn-start">Start</button>
+                            <button id="exp2-timer2a-stop" class="btn btn-stop">Stop</button>
+                            <span id="exp2-timer2a-display" class="timer-display">00:00.0</span>
+                        </div>
+                    </div>
+                    <div>
+             
+                        <h4 class="font-semibold">Zeit für ALLE Münzen:</h4>
+                        <div class="flex items-center gap-4">
+                            <button id="exp2-timer2b-start" class="btn btn-start">Start</button>
+                            <button id="exp2-timer2b-stop" class="btn btn-stop">Stop</button>
+                            <span id="exp2-timer2b-display" class="timer-display">00:00.0</span>
+                        </div>
+                    </div>
+                </div>
+      
+                <div class="mt-6">
+                    <button onclick="showStep('exp2', 2)" class="btn btn-secondary">Zurück</button>
+                    <button onclick="showStep('exp2', 4); updateExp2Charts();" class="btn btn-primary">Ergebnisse anzeigen</button>
+                </div>
+            </div>
+
+            <div data-step id="exp2-step4" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Erkenntnisse: Experiment 2</h2>
+                
+                <p class="mb-4">Hier sehen Sie den Unterschied. Die Gesamtzeit ist oft ähnlich, aber der Wert (die erste Münze) wird in Runde 2 dramatisch schneller geliefert.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="chart-container">
+                        <h3 class="text-center font-semibold text-lg">Zeit bis zur 1. fertigen Münze</h3>
+                        <canvas id="exp2Chart1"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="text-center font-semibold text-lg">Gesamtzeit</h3>
+                        <canvas id="exp2Chart2"></canvas>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-2">
+                    <h3 class="text-xl font-semibold">Warum?</h3>
+                    <p><strong>Ressourceneffizienz vs. Flusseffizienz:</strong> In Runde 1 waren alle "beschäftigt" (busy), aber der Kunde hat ewig auf den ersten Wert gewartet.
+In Runde 2 fließt der Wert sofort.</p>
+                    <p class="font-bold text-lg text-indigo-700">Kanban-Prinzip: Reduziere die Losgröße (Batch Size).</p>
+                </div>
+                <div class="mt-6">
+                    <button onclick="showStep('exp2', 3)" class="btn btn-secondary">Zurück</button>
+                </div>
+            </div>
+        </div>
+
+        <div data-page id="exp3" class="space-y-6">
+            
+            <div data-step id="exp3-step1" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Experiment 3: Der Feature-Stau</h2>
+                <h3 class="text-xl font-semibold mb-3">Das Setup</h3>
+                <ul class="list-none space-y-2">
+                    <li><span class="font-semibold">👥 Rollen:</span> 1x Manager (hat die Bälle/Aufgaben), 1x Team (muss fangen & bearbeiten)</li>
+                    <li><span class="font-semibold">🎾 Aufgabe:</span> Bälle fangen, kurz bearbeiten (drehen), in einen Eimer/Korb ablegen.</li>
+                    <li><span class="font-semibold">🗑️ Regel:</span> Bälle am Boden sind **Müll** (Ausschuss/Fehler).</li>
+                </ul>
+                <button onclick="showStep('exp3', 2)" class="btn btn-primary">Weiter zu Runde 1</button>
+            </div>
+
+            <div data-step id="exp3-step2" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Runde 1: Das "Push"-System</h2>
+                <ul class="list-none space-y-2 mb-4">
+                    <li><span class="font-semibold">📜 Manager:</span> Wirft die Aufgaben so 
+schnell wie möglich ins Team. "Wir müssen das alles schaffen!"</li>
+                    <li><span class="font-semibold">📜 Team:</span> Versucht verzweifelt, alles zu fangen.</li>
+                    <li><span class="font-semibold">🎯 Ziel:</span> Maximale Auslastung.</li>
+                </ul>
+                <p class="mb-2">Startet einen Timer (z.B. 30 Sek.) und zählt die Bälle.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="exp3-r1-done" class="block font-semibold">Bälle im Eimer (Wert):</label>
+                        <input id="exp3-r1-done" type="number" class="w-full 
+p-2 border rounded" placeholder="0" onchange="saveInput('exp3-r1-done', 'exp3_r1_done')">
+                    </div>
+                    <div>
+                        <label for="exp3-r1-fail" class="block font-semibold">Bälle am Boden (Müll):</label>
+                        <input id="exp3-r1-fail" type="number" class="w-full p-2 border rounded" placeholder="0" onchange="saveInput('exp3-r1-fail', 'exp3_r1_fail')">
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button onclick="showStep('exp3', 1)" class="btn btn-secondary">Zurück</button>
+                    <button onclick="showStep('exp3', 3)" class="btn btn-primary">Weiter zu Runde 2</button>
+                </div>
+            </div>
+
+            <div data-step id="exp3-step3" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Runde 2: Das "Pull"-System</h2>
+     
+                <ul class="list-none space-y-2 mb-4">
+                    <li><span class="font-semibold">📜 Team:</span> Gibt das Signal "Jetzt!", wenn es bereit ist.</li>
+                    <li><span class="font-semibold">📜 Manager:</span> Darf **NUR** werfen, wenn das Signal kommt.</li>
+                    <li><span class="font-semibold">🎯 Ziel:</span> 100% Qualität, 0% Müll.</li>
+                </ul>
+                <p class="mb-2">Startet denselben Timer (z.B. 30 Sek.) und zählt erneut.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="exp3-r2-done" class="block font-semibold">Bälle im Eimer (Wert):</label>
+                        <input id="exp3-r2-done" type="number" class="w-full p-2 border rounded" placeholder="0" onchange="saveInput('exp3-r2-done', 'exp3_r2_done')">
+                    </div>
+                    <div>
+                        <label for="exp3-r2-fail" class="block font-semibold">Bälle am Boden (Müll):</label>
+                        <input id="exp3-r2-fail" type="number" class="w-full p-2 border rounded" placeholder="0" onchange="saveInput('exp3-r2-fail', 'exp3_r2_fail')">
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button onclick="showStep('exp3', 2)" class="btn btn-secondary">Zurück</button>
+                    <button onclick="showStep('exp3', 4); updateExp3Chart();" class="btn btn-primary">Ergebnisse anzeigen</button>
+                </div>
+            </div>
+
+            <div data-step id="exp3-step4" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-600">Erkenntnisse: Experiment 3</h2>
+                <p class="mb-4">Hier sehen Sie das Verhältnis von Wert (im Eimer) zu Müll (am Boden). Im Pull-System ist die Qualität 100% und der Durchsatz oft sogar höher.</p>
+                <div class="chart-container">
+                    <canvas id="exp3Chart"></canvas>
+                </div>
+                <div class="mt-6 space-y-2">
+                    <h3 class="text-xl font-semibold">Warum?</h3>
+                    <p><strong>Push vs. Pull:</strong> Überlastung ("Push") führt zu Fehlern und Stress. Mehr Arbeit reinzudrücken macht das System langsamer. Bei "Pull" wird Arbeit nur angenommen, wenn Kapazität frei ist.</p>
+                    <p class="font-bold text-lg text-indigo-700">Kanban-Prinzip: Limit WIP & Pull-Prinzip.</p>
+                </div>
+                <div class="mt-6">
+                    <button onclick="showStep('exp3', 3)" class="btn btn-secondary">Zurück</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="workshop.js"></script>
+</body>
+</html>
