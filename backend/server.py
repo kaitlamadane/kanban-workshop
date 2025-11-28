@@ -12,6 +12,16 @@ import json
 
 app = FastAPI(title="Kanban Statistik Backend")
 
+# Für die Entwicklung: alles erlauben (auch file:// und ngrok)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],       # oder hier gezielt deine URLs eintragen
+    allow_credentials=False,   # bei "*" unbedingt False lassen
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # In-Memory-Datenbank
 # users: { "user_id": "Name des Teilnehmers" }
 # results: { "user_id": { "metric_key": [wert1, wert2, ...] } }
@@ -52,28 +62,29 @@ def calculate_averages() -> Dict[str, Dict[str, Union[str, float, int]]]:
             all_raw_data[metric_key].extend(values)
 
     # 2. Durchschnittswerte berechnen
-    averages = {}
+    averages: Dict[str, Dict[str, Union[str, float, int]]] = {}
+
     for key, values in all_raw_data.items():
         if not values:
             continue
 
         average_value = statistics.mean(values)
-        unit = "Stück"
-        display_value = average_value
 
-        # Formatierung (Zeit in Sekunden, Zählungen gerundet)
+        # Standard: Zählwerte
+        unit = "Stück"
+        display_value = round(average_value, 2)
+
+        # Zeit-Werte lieber in ms lassen (Admin rechnet schon in Sekunden um!)
         if key.startswith("exp") and "time" in key:
-            unit = "Sekunden"
-            display_value = round(average_value / 1000, 3)
-        else:
+            unit = "Millisekunden"
             display_value = round(average_value, 2)
-        
+
         averages[key] = {
             "avg": display_value,
             "unit": unit,
-            "count": len(values)
+            "count": len(values),
         }
-        
+
     return averages
 
 
