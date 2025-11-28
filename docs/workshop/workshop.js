@@ -1,7 +1,7 @@
 // workshop.js - Vollständige Version
 
 // HIER HÖCHSTWAHRSCHEINLICH ANPASSEN FÜR NGROK (z.B. 'https://xxxx.ngrok-free.app')
-const BACKEND_URL = 'https://03fe91648a53.ngrok-free.app'; 
+const BACKEND_URL = 'https://3c861ad2fe83.ngrok-free.app'; 
 
 let CURRENT_USER_ID = null;
 let CURRENT_USER_NAME = null;
