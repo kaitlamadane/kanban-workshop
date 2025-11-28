@@ -1,6 +1,8 @@
-//workshop.js
+// workshop.js - Vollständige Version
 
-const BACKEND_URL = 'http://127.0.0.1:8000'; // Adresse des gestarteten Python-Servers
+// HIER HÖCHSTWAHRSCHEINLICH ANPASSEN FÜR NGROK (z.B. 'https://xxxx.ngrok-free.app')
+const BACKEND_URL = 'https://93599800df74.ngrok-free.app'; 
+
 let CURRENT_USER_ID = null;
 let CURRENT_USER_NAME = null;
 let timers = {};
@@ -9,9 +11,7 @@ let chartInstances = {};
 // --- HILFSFUNKTIONEN ---
 
 /**
- * Hilfsfunktion zum Formatieren der Millisekunden in MM:SS.S
- * @param {number} ms - Zeit in Millisekunden
- * @returns {string} Formatierte Zeit
+ * Formatiert Millisekunden in MM:SS.S
  */
 function formatTime(ms) {
     const minutes = Math.floor(ms / 60000);
@@ -21,7 +21,7 @@ function formatTime(ms) {
 }
 
 /**
- * Startet den Timer.
+ * Startet einen Timer
  */
 function startTimer(displayId, timerKey) {
     if (timers[timerKey]) return;
@@ -34,7 +34,7 @@ function startTimer(displayId, timerKey) {
 }
 
 /**
- * Stoppt den Timer und speichert das Ergebnis im Backend.
+ * Stoppt Timer, speichert lokal UND sendet an Backend
  */
 async function stopTimer(displayId, timerKey, dataKey) {
     if (!timers[timerKey]) return;
@@ -45,75 +45,66 @@ async function stopTimer(displayId, timerKey, dataKey) {
     const display = document.getElementById(displayId);
     const finalTime = display.textContent;
     
-    // Umrechnung des formatierten Strings in Millisekunden
+    // Zeit berechnen (ms)
     const parts = finalTime.split(/[:.]/);
     const ms = (+parts[0] * 60000) + (+parts[1] * 1000) + (+parts[2] * 100);
     
+    // 1. LOKAL SPEICHERN (Wichtig für das eigene Diagramm!)
+    localStorage.setItem(dataKey, ms);
+    console.log(`Lokal gespeichert: ${dataKey} = ${ms}`);
+
+    // 2. AN BACKEND SENDEN (Für Admin-Statistik)
     if (CURRENT_USER_ID) {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/results`, {
+            await fetch(`${BACKEND_URL}/api/results`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: CURRENT_USER_ID,
                     metric_key: dataKey, 
-                    value: ms // Speichert Zeit in Millisekunden
+                    value: ms 
                 })
             });
-            if (!response.ok) throw new Error('Speichern der Zeit fehlgeschlagen.');
-            console.log(`[OK] ${CURRENT_USER_NAME} - Ergebnis für ${dataKey} gespeichert: ${ms}ms.`);
         } catch (error) {
-            console.error('API-Fehler beim Speichern:', error);
-            alert('FEHLER: Zeit konnte nicht gespeichert werden. Server läuft und ist erreichbar?');
+            console.error('Backend-Fehler (Daten sind aber lokal sicher):', error);
         }
-    } else {
-        alert("Bitte registrieren Sie sich zuerst.");
     }
 }
 
 /**
- * Speichert den Wert eines Input-Feldes (für Exp 3) im Backend.
+ * Speichert Input-Wert lokal UND sendet an Backend
  */
 async function saveInput(inputId, dataKey) {
     const input = document.getElementById(inputId);
     const value = parseInt(input.value) || 0;
     
+    // 1. LOKAL SPEICHERN
+    localStorage.setItem(dataKey, value);
+
+    // 2. AN BACKEND SENDEN
     if (CURRENT_USER_ID) {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/results`, {
+            await fetch(`${BACKEND_URL}/api/results`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: CURRENT_USER_ID,
                     metric_key: dataKey, 
-                    value: value // Speichert Zählung als Zahl
+                    value: value
                 })
             });
-            if (!response.ok) throw new Error('Speichern der Zählung fehlgeschlagen.');
-            console.log(`[OK] ${CURRENT_USER_NAME} - Ergebnis für ${dataKey} gespeichert: ${value}.`);
         } catch (error) {
-            console.error('API-Fehler beim Speichern:', error);
-            alert('FEHLER: Zählung konnte nicht gespeichert werden. Server läuft?');
+            console.error('Backend-Fehler:', error);
         }
-    } else {
-        // Obwohl das input-Feld bereits eine onChange-Funktion hat, sollte dies nur zur Konsistenz dienen.
     }
 }
 
-/**
- * Zeigt die Hauptseite an und aktualisiert die Navigation.
- */
+// --- NAVIGATION ---
+
 function showPage(pageId) {
-    // ... unveränderte Logik ...
-    document.querySelectorAll('[data-page]').forEach(page => {
-        page.style.display = 'none';
-    });
-    const pageElement = document.getElementById(pageId);
-    if (pageElement) {
-        pageElement.style.display = 'block';
-    } else {
-        console.error(`Seite ${pageId} nicht gefunden.`);
-    }
+    document.querySelectorAll('[data-page]').forEach(page => page.style.display = 'none');
+    const target = document.getElementById(pageId);
+    if(target) target.style.display = 'block';
 
     document.querySelectorAll('[data-nav-button]').forEach(btn => {
         btn.classList.remove('active', 'btn-primary');
@@ -126,22 +117,13 @@ function showPage(pageId) {
     }
 }
 
-/**
- * Zeigt einen spezifischen Schritt innerhalb eines Experiments an.
- */
 function showStep(expId, stepNum) {
-    // ... unveränderte Logik ...
-    document.querySelectorAll(`#${expId} [data-step]`).forEach(step => {
-        step.style.display = 'none';
-    });
+    document.querySelectorAll(`#${expId} [data-step]`).forEach(step => step.style.display = 'none');
     document.getElementById(`${expId}-step${stepNum}`).style.display = 'block';
 }
 
 // --- USER MANAGEMENT ---
 
-/**
- * Registriert den Benutzer beim Server und speichert die ID.
- */
 async function registerUser(name) {
     try {
         const response = await fetch(`${BACKEND_URL}/api/register`, {
@@ -149,143 +131,121 @@ async function registerUser(name) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name })
         });
-
-        if (!response.ok) throw new Error('Registrierung fehlgeschlagen.');
-
+        if (!response.ok) throw new Error('Fehler');
         const data = await response.json();
         
         CURRENT_USER_ID = data.user_id;
         CURRENT_USER_NAME = data.name;
-
-        // Speichere ID und Name persistent im Browser
         localStorage.setItem('kanban_user_id', CURRENT_USER_ID);
         localStorage.setItem('kanban_user_name', CURRENT_USER_NAME);
 
-        document.getElementById('welcome-name').textContent = `Willkommen, ${CURRENT_USER_NAME}!`;
-        showPage('home');
-        document.getElementById('registration-card').style.display = 'none';
-        document.getElementById('home-content').style.display = 'block';
-
+        initUser(); // UI aktualisieren
 
     } catch (error) {
-        console.error('API-Fehler bei Registrierung:', error);
-        alert('Fehler bei der Registrierung. Überprüfen Sie, ob der Python-Server läuft.');
+        alert('Registrierung fehlgeschlagen. Server läuft?');
     }
 }
 
-/**
- * Initialisiert den Benutzer beim Laden der Seite.
- */
-async function initUser() {
+function initUser() {
     CURRENT_USER_ID = localStorage.getItem('kanban_user_id');
     CURRENT_USER_NAME = localStorage.getItem('kanban_user_name');
 
-    // Wenn User-Daten vorhanden, die UI anpassen und zur Home-Seite springen
     if (CURRENT_USER_ID && CURRENT_USER_NAME) {
-        document.getElementById('welcome-name').textContent = `Willkommen, ${CURRENT_USER_NAME}!`;
-        document.getElementById('registration-card').style.display = 'none';
-        document.getElementById('home-content').style.display = 'block';
+        const welcome = document.getElementById('welcome-name');
+        if(welcome) welcome.textContent = `Willkommen, ${CURRENT_USER_NAME}!`;
+        
+        const regCard = document.getElementById('registration-card');
+        if(regCard) regCard.style.display = 'none';
+        
+        const content = document.getElementById('home-content');
+        if(content) content.style.display = 'block';
+        
         showPage('home');
     } else {
-        // Ansonsten das Registrierungsformular anzeigen
-        document.getElementById('registration-card').style.display = 'block';
-        document.getElementById('home-content').style.display = 'none';
+        const regCard = document.getElementById('registration-card');
+        if(regCard) regCard.style.display = 'block';
+        
+        const content = document.getElementById('home-content');
+        if(content) content.style.display = 'none';
+        
         showPage('home');
     }
 }
 
-
-// --- CHART LOGIC (Aggregiert) ---
-
-/**
- * Holt die aggregierten Durchschnittswerte vom Server.
- * Da das Backend keine user-spezifischen Abfragen unterstützt, zeigen wir nur die globalen Durchschnitte.
- */
-async function fetchAndPlotAverages(chartName, dataKeys, labels) {
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/stats/averages`);
-        if (!response.ok) throw new Error('Statistiken konnten nicht geladen werden.');
-        
-        const averages = await response.json();
-        
-        let avgData = [];
-        dataKeys.forEach(key => {
-            // Die Werte kommen bereits als Sekunden (float) oder Zählungen vom Server
-            const item = averages[key];
-            let value = item ? item.avg : 0;
-            avgData.push(value); 
-        });
-
-        const chart = chartInstances[chartName];
-        if (chart) {
-            chart.data.datasets[0].data = avgData;
-            chart.data.datasets[0].label = 'Durchschnittszeit (Sekunden)';
-            chart.options.scales.y.title.text = labels.y_axis; // Aktualisiere die Achsenbeschriftung
-            chart.update();
-        }
-
-    } catch (error) {
-        console.error('Fehler beim Laden der aggregierten Daten:', error);
-        // Fallback-Hinweis im Chart-Canvas (funktioniert nur, wenn das Chart noch nicht initialisiert wurde)
-        const ctx = document.getElementById(chartName).getContext('2d');
-        ctx.font = '14px Inter';
-        ctx.fillStyle = '#ef4444';
-        ctx.textAlign = 'center';
-        ctx.fillText('Daten konnten nicht vom Server geladen werden.', 300, 150); 
-    }
-}
-
+// --- CHART FUNKTIONEN (NUR LOKALE DATEN) ---
 
 function updateExp1Chart() {
-    fetchAndPlotAverages('exp1Chart', ['exp1_time1', 'exp1_time2'], { y_axis: 'Zeit (Sekunden)' });
+    // Daten aus localStorage holen
+    const t1 = localStorage.getItem('exp1_time1') || 0;
+    const t2 = localStorage.getItem('exp1_time2') || 0;
+
+    const chart = chartInstances.exp1;
+    if (chart) {
+        chart.data.datasets[0].data = [t1, t2];
+        chart.update();
+    }
 }
 
 function updateExp2Charts() {
-    fetchAndPlotAverages('exp2a', ['exp2_time1a', 'exp2_time2a'], { y_axis: 'Zeit (Sekunden)' });
-    fetchAndPlotAverages('exp2b', ['exp2_time1b', 'exp2_time2b'], { y_axis: 'Zeit (Sekunden)' });
-}
+    // Chart 1: Erste Münze
+    const t1a = localStorage.getItem('exp2_time1a') || 0;
+    const t2a = localStorage.getItem('exp2_time2a') || 0;
+    
+    // Chart 2: Alle Münzen
+    const t1b = localStorage.getItem('exp2_time1b') || 0;
+    const t2b = localStorage.getItem('exp2_time2b') || 0;
 
-async function updateExp3Chart() {
-     try {
-        const response = await fetch(`${BACKEND_URL}/api/stats/averages`);
-        if (!response.ok) throw new Error('Statistiken konnten nicht geladen werden.');
-        
-        const averages = await response.json();
-        
-        // Die Werte sind bereits gerundete Durchschnitte der Zählungen
-        const doneData = [averages['exp3_r1_done']?.avg || 0, averages['exp3_r2_done']?.avg || 0];
-        const failData = [averages['exp3_r1_fail']?.avg || 0, averages['exp3_r2_fail']?.avg || 0];
-
-        const chart = chartInstances.exp3;
-        if (chart) {
-            chart.data.datasets[0].data = doneData; // Wert (im Eimer)
-            chart.data.datasets[1].data = failData; // Müll (am Boden)
-            chart.update();
-        }
-
-    } catch (error) {
-        console.error('Fehler beim Laden der aggregierten Exp 3 Daten:', error);
+    if (chartInstances.exp2a) {
+        chartInstances.exp2a.data.datasets[0].data = [t1a, t2a];
+        chartInstances.exp2a.update();
+    }
+    if (chartInstances.exp2b) {
+        chartInstances.exp2b.data.datasets[0].data = [t1b, t2b];
+        chartInstances.exp2b.update();
     }
 }
 
-/**
- * Initialisiert alle Chart.js-Diagramme (Struktur bleibt gleich).
- */
+function updateExp3Chart() {
+    const r1_done = localStorage.getItem('exp3_r1_done') || 0;
+    const r1_fail = localStorage.getItem('exp3_r1_fail') || 0;
+    const r2_done = localStorage.getItem('exp3_r2_done') || 0;
+    const r2_fail = localStorage.getItem('exp3_r2_fail') || 0;
+
+    const chart = chartInstances.exp3;
+    if (chart) {
+        chart.data.datasets[0].data = [r1_done, r2_done]; // Wert
+        chart.data.datasets[1].data = [r1_fail, r2_fail]; // Müll
+        chart.update();
+    }
+}
+
+// --- INIT CHARTS ---
+
 function initCharts() {
     Chart.defaults.font.size = 14;
     Chart.defaults.font.family = "'Inter', sans-serif";
     
-    // ... (Chart-Initialisierungscode aus der Originaldatei bleibt hier unverändert) ...
-    // Ich kürze den Code hier ab, da er in der Originaldatei vorhanden war.
+    // Helper für Sekunden-Anzeige
+    const timeScaleOptions = {
+        beginAtZero: true, 
+        title: { display: true, text: 'Zeit (Sekunden)' },
+        ticks: { callback: (val) => (val / 1000).toFixed(1) } // MS -> Sek
+    };
+    
+    const tooltipTime = {
+        callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${(ctx.parsed.y / 1000).toFixed(1)} s`
+        }
+    };
 
-    // Exp 1 Chart
+    // --- EXP 1 ---
     const ctx1 = document.getElementById('exp1Chart').getContext('2d');
     chartInstances.exp1 = new Chart(ctx1, {
         type: 'bar',
         data: {
             labels: ['Runde 1 (Chaos)', 'Runde 2 (Fokus)'],
             datasets: [{
-                label: 'Durchschnittszeit',
+                label: 'Ihre Zeit',
                 data: [0, 0],
                 backgroundColor: ['#fca5a5', '#86efac'],
                 borderColor: ['#ef4444', '#22c55e'],
@@ -295,19 +255,19 @@ function initCharts() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Zeit (Sekunden)' } } }
+            plugins: { legend: { display: false }, tooltip: tooltipTime },
+            scales: { y: timeScaleOptions }
         }
     });
 
-    // Exp 2 Chart 1: Zeit bis zur 1. fertigen Münze
+    // --- EXP 2 ---
     const ctx2a = document.getElementById('exp2Chart1').getContext('2d');
     chartInstances.exp2a = new Chart(ctx2a, {
         type: 'bar',
         data: {
-            labels: ['Runde 1 (Batch 20)', 'Runde 2 (Batch 1)'],
+            labels: ['Batch 20', 'Batch 1'],
             datasets: [{
-                label: 'Durchschnittszeit',
+                label: 'Zeit bis 1. Münze',
                 data: [0, 0],
                 backgroundColor: ['#fca5a5', '#86efac'],
                 borderColor: ['#ef4444', '#22c55e'],
@@ -317,19 +277,18 @@ function initCharts() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Zeit (Sekunden)' } } }
+            plugins: { legend: { display: false }, tooltip: tooltipTime },
+            scales: { y: timeScaleOptions }
         }
     });
 
-    // Exp 2 Chart 2: Gesamtzeit
     const ctx2b = document.getElementById('exp2Chart2').getContext('2d');
     chartInstances.exp2b = new Chart(ctx2b, {
         type: 'bar',
         data: {
-            labels: ['Runde 1 (Batch 20)', 'Runde 2 (Batch 1)'],
+            labels: ['Batch 20', 'Batch 1'],
             datasets: [{
-                label: 'Durchschnittszeit',
+                label: 'Gesamtzeit',
                 data: [0, 0],
                 backgroundColor: ['#fca5a5', '#86efac'],
                 borderColor: ['#ef4444', '#22c55e'],
@@ -339,28 +298,20 @@ function initCharts() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, title: { display: true, text: 'Zeit (Sekunden)' } } }
+            plugins: { legend: { display: false }, tooltip: tooltipTime },
+            scales: { y: timeScaleOptions }
         }
     });
 
-    // Exp 3 Chart: Stacked Bar
+    // --- EXP 3 ---
     const ctx3 = document.getElementById('exp3Chart').getContext('2d');
     chartInstances.exp3 = new Chart(ctx3, {
         type: 'bar',
         data: {
-            labels: ['Runde 1 (Push)', 'Runde 2 (Pull)'],
+            labels: ['Push', 'Pull'],
             datasets: [
-                {
-                    label: 'Wert (im Eimer)',
-                    data: [0, 0],
-                    backgroundColor: '#22c55e',
-                },
-                {
-                    label: 'Müll (am Boden)',
-                    data: [0, 0],
-                    backgroundColor: '#ef4444',
-                }
+                { label: 'Wert (Fertig)', data: [0, 0], backgroundColor: '#22c55e' },
+                { label: 'Müll (Fehler)', data: [0, 0], backgroundColor: '#ef4444' }
             ]
         },
         options: {
@@ -368,59 +319,61 @@ function initCharts() {
             maintainAspectRatio: false,
             scales: {
                 x: { stacked: true },
-                y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Anzahl Bälle' } }
+                y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Anzahl' } }
             }
         }
     });
 }
 
-// --- INITIALISIERUNG ---
+
+// --- MAIN EVENT LISTENER ---
 
 document.addEventListener('DOMContentLoaded', () => {
     initCharts();
+    initUser();
     
-    // Initialisiere den Benutzer (fragt nach Registrierung, falls nötig)
-    initUser(); 
-
-    // Die showStep-Aufrufe können bleiben, um die Standardansichten zu setzen
     showStep('exp1', 1);
     showStep('exp2', 1);
     showStep('exp3', 1);
 
-    // Navigation-Buttons
+    // Navigation
     document.querySelectorAll('[data-nav-button]').forEach(btn => {
         btn.addEventListener('click', () => showPage(btn.dataset.navButton));
     });
-    
-    // Registrierungs-Button
-    document.getElementById('register-button').addEventListener('click', () => {
-        const nameInput = document.getElementById('user-name-input');
-        if (nameInput.value) {
-            registerUser(nameInput.value);
-        } else {
-            alert('Bitte geben Sie einen Namen ein.');
-        }
-    });
 
-    // Timer-Events
+    // Registrierung
+    const regBtn = document.getElementById('register-button');
+    if(regBtn) {
+        regBtn.addEventListener('click', () => {
+            const name = document.getElementById('user-name-input').value;
+            if (name) registerUser(name);
+            else alert('Bitte Namen eingeben.');
+        });
+    }
+
+    // Exp 1 Buttons
     document.getElementById('exp1-timer1-start').addEventListener('click', () => startTimer('exp1-timer1-display', 'exp1_1'));
     document.getElementById('exp1-timer1-stop').addEventListener('click', () => stopTimer('exp1-timer1-display', 'exp1_1', 'exp1_time1'));
     document.getElementById('exp1-timer2-start').addEventListener('click', () => startTimer('exp1-timer2-display', 'exp1_2'));
     document.getElementById('exp1-timer2-stop').addEventListener('click', () => stopTimer('exp1-timer2-display', 'exp1_2', 'exp1_time2'));
 
+    // Exp 2 Buttons
     document.getElementById('exp2-timer1a-start').addEventListener('click', () => startTimer('exp2-timer1a-display', 'exp2_1a'));
+    document.getElementById('exp2-timer1a-start').addEventListener('click', () => startTimer('exp2-timer1b-display', 'exp2_1b')); //beide timer sollen gleichzeitig starten
     document.getElementById('exp2-timer1a-stop').addEventListener('click', () => stopTimer('exp2-timer1a-display', 'exp2_1a', 'exp2_time1a'));
-    document.getElementById('exp2-timer1b-start').addEventListener('click', () => startTimer('exp2-timer1b-display', 'exp2_1b'));
+    //document.getElementById('exp2-timer1b-start').addEventListener('click', () => startTimer('exp2-timer1b-display', 'exp2_1b'));
     document.getElementById('exp2-timer1b-stop').addEventListener('click', () => stopTimer('exp2-timer1b-display', 'exp2_1b', 'exp2_time1b'));
+    
     document.getElementById('exp2-timer2a-start').addEventListener('click', () => startTimer('exp2-timer2a-display', 'exp2_2a'));
+    document.getElementById('exp2-timer2a-start').addEventListener('click', () => startTimer('exp2-timer2b-display', 'exp2_2b')); // beide timer sollen gleichzeitig starten
     document.getElementById('exp2-timer2a-stop').addEventListener('click', () => stopTimer('exp2-timer2a-display', 'exp2_2a', 'exp2_time2a'));
-    document.getElementById('exp2-timer2b-start').addEventListener('click', () => startTimer('exp2-timer2b-display', 'exp2_2b'));
+    //document.getElementById('exp2-timer2b-start').addEventListener('click', () => startTimer('exp2-timer2b-display', 'exp2_2b'));
     document.getElementById('exp2-timer2b-stop').addEventListener('click', () => stopTimer('exp2-timer2b-display', 'exp2_2b', 'exp2_time2b'));
 });
 
-// Export der Funktionen für onclick-Attribute im HTML
+// Global verfügbar machen für HTML onclick
 window.showStep = showStep;
 window.updateExp1Chart = updateExp1Chart;
 window.updateExp2Charts = updateExp2Charts;
 window.updateExp3Chart = updateExp3Chart;
-window.saveInput = saveInput; // saveInput muss jetzt ASYNC sein
+window.saveInput = saveInput;

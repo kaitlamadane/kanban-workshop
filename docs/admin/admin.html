@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Statistik Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
     // --- START SICHERHEIT ---
     const CORRECT_PASSWORD = "admin321"; // Passen Sie dieses Passwort an!
@@ -22,10 +23,19 @@
     <style>
         body { font-family: sans-serif; background-color: #f7f9fb; }
         .card { background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 1.5rem; }
+        /* Stil für Chart-Container (vom User-Frontend übernommen) */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* etwas größer für die Admin-Ansicht */
+        }
     </style>
 </head>
 <body class="p-8">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <h1 class="text-3xl font-bold text-indigo-700 mb-8 flex items-center">
             <i class="fas fa-chart-bar mr-3"></i> Aggregierte Kanban Workshop Statistiken
         </h1>
@@ -35,20 +45,36 @@
             <p id="error" class="text-red-600 hidden"><i class="fas fa-exclamation-triangle mr-2"></i> Fehler beim Laden der Daten. Ist der Server gestartet?</p>
         </div>
         
-        <div id="stats-container" class="hidden">
-            <h2 class="text-xl font-semibold mb-4 text-gray-700">Durchschnittswerte aller Teilnehmer</h2>
-            <div class="card overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metrik</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durchschnitt</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anz. Messungen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stats-table-body" class="bg-white divide-y divide-gray-200">
-                        </tbody>
-                </table>
+        <div id="stats-container" class="hidden space-y-8">
+            <h2 class="text-2xl font-semibold text-gray-700 border-b pb-2">Visuelle Ergebnisse aller Teilnehmer</h2>
+            
+            <div class="card">
+                <h3 class="text-xl font-bold mb-4 text-indigo-600">Experiment 1: Multitasking-Mythos (Zeit)</h3>
+                <div class="chart-container">
+                    <canvas id="adminExp1Chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <div>
+                    <h3 class="text-xl font-bold mb-4 text-indigo-600">Exp. 2: Zeit bis zur 1. Münze (Flow)</h3>
+                    <div class="chart-container">
+                        <canvas id="adminExp2Chart1"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-indigo-600">Exp. 2: Gesamtzeit (Durchsatz)</h3>
+                    <div class="chart-container">
+                        <canvas id="adminExp2Chart2"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-xl font-bold mb-4 text-indigo-600">Experiment 3: Feature-Stau (Wert vs. Müll)</h3>
+                <div class="chart-container">
+                    <canvas id="adminExp3Chart"></canvas>
+                </div>
             </div>
             
             <h2 class="text-xl font-semibold mt-8 mb-4 text-gray-700">Registrierte Teilnehmer</h2>

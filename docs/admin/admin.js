@@ -1,34 +1,27 @@
 // admin.js
-const BACKEND_URL = 'http://127.0.0.1:8000'; // Adresse des FastAPI Servers
+const BACKEND_URL = 'https://93599800df74.ngrok-free.app'; // Adresse des FastAPI Servers
+
+let chartInstances = {}; // Speichert die Chart-Instanzen
 
 /**
- * Konvertiert einen metrischen Schlüssel in einen lesbaren Namen.
- * @param {string} key - Der Schlüssel aus der Datenbank (z.B. exp1_time1)
- * @returns {string} Ein lesbarer Name.
+ * Konvertiert Millisekunden in ein lesbares Format für die Diagrammbeschriftung.
+ * @param {number} ms - Zeit in Millisekunden
+ * @returns {string} Formatierte Zeit (z.B. "15.5 Sek")
  */
-function getReadableName(key) {
-    let name = key.replace(/exp(\d)_/, 'Experiment $1: ');
-    name = name.replace(/time(\d)/, 'Runde $1 (Zeit)');
-    name = name.replace(/r(\d)_(done|fail)/, 'Runde $1 ($2)');
-    name = name.replace('done', 'Fertig');
-    name = name.replace('fail', 'Fehler');
-    name = name.replace('time1a', 'R1 (Erste Münze)');
-    name = name.replace('time1b', 'R1 (Alle Münzen)');
-    name = name.replace('time2a', 'R2 (Erste Münze)');
-    name = name.replace('time2b', 'R2 (Alle Münzen)');
-    return name.charAt(0).toUpperCase() + name.slice(1);
+function formatMsToSeconds(ms) {
+    if (typeof ms !== 'number' || isNaN(ms)) return '0';
+    return (ms / 1000).toFixed(1) + ' Sek';
 }
 
 /**
- * Ruft die aggregierten Durchschnittswerte vom Server ab und rendert die Tabelle.
+ * Ruft die aggregierten Durchschnittswerte vom Server ab, initialisiert die Charts
+ * und rendert die Daten.
  */
 async function fetchAndRenderStats() {
-    const tableBody = document.getElementById('stats-table-body');
     const loading = document.getElementById('loading');
     const error = document.getElementById('error');
     const statsContainer = document.getElementById('stats-container');
     
-    tableBody.innerHTML = '';
     loading.classList.remove('hidden');
     error.classList.add('hidden');
     
@@ -39,19 +32,15 @@ async function fetchAndRenderStats() {
         
         const averages = await response.json();
 
-        // 2. Tabelle rendern
-        for (const key in averages) {
-            const item = averages[key];
-            const row = tableBody.insertRow();
-            row.className = 'hover:bg-gray-50';
-            row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${getReadableName(key)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">${item.avg} ${item.unit}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.count}</td>
-            `;
+        // 2. Charts initialisieren (falls noch nicht geschehen)
+        if (Object.keys(chartInstances).length === 0) {
+            initCharts();
         }
+
+        // 3. Charts mit Durchschnittswerten aktualisieren
+        updateCharts(averages);
         
-        // 3. Teilnehmerliste abrufen und rendern
+        // 4. Teilnehmerliste abrufen und rendern
         await fetchAndRenderUsers();
 
         loading.classList.add('hidden');
@@ -65,7 +54,145 @@ async function fetchAndRenderStats() {
 }
 
 /**
- * Ruft die registrierten Benutzer ab und zeigt sie an.
+ * Initialisiert alle Chart.js Diagramme.
+ */
+function initCharts() {
+    // Shared Chart Options
+    const sharedOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: true, position: 'top' },
+            tooltip: { callbacks: { label: (context) => {
+                const value = context.parsed.y;
+                return context.dataset.label + ': ' + formatMsToSeconds(value);
+            }}}
+        },
+        scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Zeit (ms)' }, ticks: { callback: formatMsToSeconds } }
+        }
+    };
+
+    // --- Exp 1 Chart ---
+    chartInstances.exp1 = new Chart(document.getElementById('adminExp1Chart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Runde 1 (Zeilenweise)', 'Runde 2 (Spaltenweise / Fokus)'],
+            datasets: [{
+                label: 'Durchschnittliche Zeit',
+                data: [0, 0],
+                backgroundColor: ['#fca5a5', '#86efac'], // Rot für Batch/Chaos, Grün für Flow/Fokus
+                borderColor: ['#ef4444', '#22c55e'],
+                borderWidth: 1
+            }]
+        },
+        options: { ...sharedOptions, plugins: { legend: { display: false } } }
+    });
+
+    // --- Exp 2 Chart 1 (Erste Münze) ---
+    chartInstances.exp2a = new Chart(document.getElementById('adminExp2Chart1').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Runde 1 (Batch 20)', 'Runde 2 (Batch 1 / Flow)'],
+            datasets: [{
+                label: 'Durchschnittliche Zeit bis zur 1. Münze',
+                data: [0, 0],
+                backgroundColor: ['#f87171', '#34d399'],
+                borderColor: ['#b91c1c', '#059669'],
+                borderWidth: 1
+            }]
+        },
+        options: { ...sharedOptions, plugins: { legend: { display: false } } }
+    });
+
+    // --- Exp 2 Chart 2 (Gesamtzeit) ---
+    chartInstances.exp2b = new Chart(document.getElementById('adminExp2Chart2').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Runde 1 (Batch 20)', 'Runde 2 (Batch 1 / Flow)'],
+            datasets: [{
+                label: 'Durchschnittliche Gesamtzeit',
+                data: [0, 0],
+                backgroundColor: ['#6366f1', '#a78bfa'], // Andere Farben für Unterscheidung
+                borderColor: ['#4f46e5', '#8b5cf6'],
+                borderWidth: 1
+            }]
+        },
+        options: { ...sharedOptions, plugins: { legend: { display: false } } }
+    });
+
+    // --- Exp 3 Chart (Stacked Bar) ---
+    const exp3Options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top' } },
+        scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Anzahl Bälle' } }
+        }
+    };
+
+    chartInstances.exp3 = new Chart(document.getElementById('adminExp3Chart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Runde 1 (Push)', 'Runde 2 (Pull)'],
+            datasets: [
+                {
+                    label: 'Wert (im Eimer - Avg.)',
+                    data: [0, 0],
+                    backgroundColor: '#22c55e',
+                },
+                {
+                    label: 'Müll (am Boden - Avg.)',
+                    data: [0, 0],
+                    backgroundColor: '#ef4444',
+                }
+            ]
+        },
+        options: exp3Options
+    });
+}
+
+/**
+ * Aktualisiert die Daten in den Chart-Instanzen.
+ * @param {object} averages - Die vom Server abgerufenen Durchschnittswerte.
+ */
+function updateCharts(averages) {
+    // EXP 1
+    const exp1_time1 = averages.exp1_time1 ? averages.exp1_time1.avg : 0;
+    const exp1_time2 = averages.exp1_time2 ? averages.exp1_time2.avg : 0;
+    chartInstances.exp1.data.datasets[0].data = [exp1_time1, exp1_time2];
+    chartInstances.exp1.update();
+
+    // EXP 2
+    const exp2_time1a = averages.exp2_time1a ? averages.exp2_time1a.avg : 0;
+    const exp2_time2a = averages.exp2_time2a ? averages.exp2_time2a.avg : 0;
+    chartInstances.exp2a.data.datasets[0].data = [exp2_time1a, exp2_time2a];
+    chartInstances.exp2a.update();
+
+    const exp2_time1b = averages.exp2_time1b ? averages.exp2_time1b.avg : 0;
+    const exp2_time2b = averages.exp2_time2b ? averages.exp2_time2b.avg : 0;
+    chartInstances.exp2b.data.datasets[0].data = [exp2_time1b, exp2_time2b];
+    chartInstances.exp2b.update();
+
+    // EXP 3 (Gezählt in ganzen Zahlen, nicht Millisekunden)
+    const exp3_r1_done = averages.exp3_r1_done ? averages.exp3_r1_done.avg : 0;
+    const exp3_r1_fail = averages.exp3_r1_fail ? averages.exp3_r1_fail.avg : 0;
+    const exp3_r2_done = averages.exp3_r2_done ? averages.exp3_r2_done.avg : 0;
+    const exp3_r2_fail = averages.exp3_r2_fail ? averages.exp3_r2_fail.avg : 0;
+
+    chartInstances.exp3.data.datasets[0].data = [exp3_r1_done, exp3_r2_done]; // Wert
+    chartInstances.exp3.data.datasets[1].data = [exp3_r1_fail, exp3_r2_fail]; // Müll
+    chartInstances.exp3.options.plugins.tooltip.callbacks.label = (context) => {
+        return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+    };
+    chartInstances.exp3.options.scales.y.ticks.callback = (value) => value.toFixed(0);
+    chartInstances.exp3.update();
+}
+
+
+/**
+ * Ruft die registrierten Benutzer ab und zeigt sie an. (Unverändert)
  */
 async function fetchAndRenderUsers() {
     const userList = document.getElementById('user-list');
