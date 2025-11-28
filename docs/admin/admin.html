@@ -6,19 +6,6 @@
     <title>Kanban Statistik Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-    // --- START SICHERHEIT ---
-    const CORRECT_PASSWORD = "admin321"; // Passen Sie dieses Passwort an!
-    let password = prompt("Bitte geben Sie das Admin-Passwort ein, um die Daten zu sehen:");
-    
-    // Solange das Passwort falsch ist oder nicht eingegeben wird, bleibt die Seite leer
-    if (password !== CORRECT_PASSWORD) {
-        document.body.innerHTML = '<h1>Zugriff verweigert. Bitte korrekten Code eingeben.</h1>';
-        // Beendet das weitere Laden des Skripts, um Datenabfragen zu verhindern
-        throw new Error("Falsches Passwort eingegeben."); 
-    }
-    // --- ENDE SICHERHEIT ---
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: sans-serif; background-color: #f7f9fb; }

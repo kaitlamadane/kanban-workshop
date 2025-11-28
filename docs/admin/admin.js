@@ -1,5 +1,5 @@
 // admin.js
-const BACKEND_URL = 'https://2b728836c99b.ngrok-free.app'; // Adresse des FastAPI Servers
+const BACKEND_URL = 'https://assistant-liz-demonstrated-potentially.trycloudflare.com'; // Adresse des FastAPI Servers
 
 let chartInstances = {}; // Speichert die Chart-Instanzen
 

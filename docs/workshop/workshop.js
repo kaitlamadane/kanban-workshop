@@ -1,7 +1,7 @@
 // workshop.js - Vollständige Version
 
 // HIER HÖCHSTWAHRSCHEINLICH ANPASSEN FÜR NGROK (z.B. 'https://xxxx.ngrok-free.app')
-const BACKEND_URL = 'https://2b728836c99b.ngrok-free.app'; 
+const BACKEND_URL = 'https://assistant-liz-demonstrated-potentially.trycloudflare.com'; 
 
 let CURRENT_USER_ID = null;
 let CURRENT_USER_NAME = null;
@@ -146,30 +146,71 @@ async function registerUser(name) {
     }
 }
 
-function initUser() {
+// --- USER MANAGEMENT ---
+
+async function initUser() {
+    // 1. User aus localStorage holen
     CURRENT_USER_ID = localStorage.getItem('kanban_user_id');
     CURRENT_USER_NAME = localStorage.getItem('kanban_user_name');
 
-    if (CURRENT_USER_ID && CURRENT_USER_NAME) {
+    // Hilfsfunktionen für UI
+    const showLoggedInUI = () => {
         const welcome = document.getElementById('welcome-name');
-        if(welcome) welcome.textContent = `Willkommen, ${CURRENT_USER_NAME}!`;
-        
+        if (welcome) welcome.textContent = `Willkommen, ${CURRENT_USER_NAME}!`;
+
         const regCard = document.getElementById('registration-card');
-        if(regCard) regCard.style.display = 'none';
-        
+        if (regCard) regCard.style.display = 'none';
+
         const content = document.getElementById('home-content');
-        if(content) content.style.display = 'block';
-        
+        if (content) content.style.display = 'block';
+
         showPage('home');
-    } else {
+    };
+
+    const showRegistrationUI = () => {
+        const welcome = document.getElementById('welcome-name');
+        if (welcome) welcome.textContent = '';
+
         const regCard = document.getElementById('registration-card');
-        if(regCard) regCard.style.display = 'block';
-        
+        if (regCard) regCard.style.display = 'block';
+
         const content = document.getElementById('home-content');
-        if(content) content.style.display = 'none';
-        
+        if (content) content.style.display = 'none';
+
         showPage('home');
+    };
+
+    // 2. Wenn im LocalStorage etwas steht -> beim Backend nachfragen
+    if (CURRENT_USER_ID && CURRENT_USER_NAME) {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/stats/users`);
+            if (res.ok) {
+                const users = await res.json();
+                const exists = users.some(u => u.user_id === CURRENT_USER_ID);
+
+                if (exists) {
+                    // User ist dem Server bekannt -> ganz normal einloggen
+                    showLoggedInUI();
+                    return;
+                }
+            }
+            // Wenn wir hier sind: User existiert beim Server nicht (mehr)
+            console.warn('User aus localStorage existiert nicht mehr im Backend. LocalStorage wird zurückgesetzt.');
+
+        } catch (err) {
+            console.error('Fehler beim Prüfen des Users im Backend:', err);
+            // falls der Server gar nicht erreichbar ist, lieber neu registrieren lassen
+        }
+
+        // LocalStorage und Variablen zurücksetzen
+        CURRENT_USER_ID = null;
+        CURRENT_USER_NAME = null;
+        localStorage.removeItem('kanban_user_id');
+        localStorage.removeItem('kanban_user_name');
     }
+
+    // 3. Kein gültiger User -> Registrierungsmaske anzeigen
+    showRegistrationUI();
 }
 
 // --- CHART FUNKTIONEN (NUR LOKALE DATEN) ---
