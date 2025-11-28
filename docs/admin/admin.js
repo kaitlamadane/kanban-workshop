@@ -1,5 +1,5 @@
 // admin.js
-const BACKEND_URL = 'https://93599800df74.ngrok-free.app'; // Adresse des FastAPI Servers
+const BACKEND_URL = 'https://03fe91648a53.ngrok-free.app'; // Adresse des FastAPI Servers
 
 let chartInstances = {}; // Speichert die Chart-Instanzen
 
