@@ -1,7 +1,7 @@
 // workshop.js - Vollständige Version
 
 // HIER HÖCHSTWAHRSCHEINLICH ANPASSEN FÜR NGROK (z.B. 'https://xxxx.ngrok-free.app')
-const BACKEND_URL = 'https://gathered-playlist-display-participants.trycloudflare.com'; 
+const BACKEND_URL = ' https://clinton-lender-casinos-balloon.trycloudflare.com'; 
 
 let CURRENT_USER_ID = null;
 let CURRENT_USER_NAME = null;

@@ -1,5 +1,5 @@
 // admin.js
-const BACKEND_URL = 'https://gathered-playlist-display-participants.trycloudflare.com'; // Adresse des FastAPI Servers
+const BACKEND_URL = 'https://clinton-lender-casinos-balloon.trycloudflare.com'; // Adresse des FastAPI Servers
 
 let chartInstances = {}; // Speichert die Chart-Instanzen
 
